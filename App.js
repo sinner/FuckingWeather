@@ -53,6 +53,7 @@ export default class App extends Component<{}> {
     this.state = {
       temp: 0,
       weather: 'Clear',
+      zoneName: 'There',
     };
   }
 
@@ -62,28 +63,34 @@ export default class App extends Component<{}> {
 
   componentDidMount() {
     this.geoLocation();
-    fetchWeather(-21, 28).then((data) => console.log(data));
   }
 
   geoLocation() {
-    navigator.geolocation.getCurrentPosition(
+    navigator.geolocation.watchPosition(
       (positionData) => {
         fetchWeather(positionData.coords.latitude, positionData.coords.longitude)
           .then((data) => {
             this.setState({
               temp: data.temp,
               weather: data.weather,
+              zoneName: data.zoneName,
             });
-            console.log(this.state.temp);
           }, (error) => {
-            console.log(error);
+            console.log('Error while it is fetching the weather', error);
           });
       },
       (error) => {
-        console.log(error);
+        console.log('Error while it is capturing the current position', error);
       },
-      {timeout: 10000, enableHighAccuracy: true}
+      {timeout: 1000, maximumAge: 0, enableHighAccuracy: true}
     );
+  }
+
+  getAWeatherPhrase() {
+    if(this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+      return phrases[this.state.weather].title;
+    }
+    return null;
   }
 
   render() {
@@ -97,10 +104,10 @@ export default class App extends Component<{}> {
           <Highlighter
             style={styles.appTitle}
             highlightStyle={{color: '#FF0000'}}
-            searchWords={['Rock', 'stay', 'devices', 'Fucking']}
-            textToHighlight={phrases[this.state.weather].title || 'Build a Fucking Weather App'}
+            searchWords={['Rock', 'Cloud', 'go', 'stay', 'devices', 'Fucking']}
+            textToHighlight={this.getAWeatherPhrase() || 'Build a Fucking Weather App'}
           />
-          <Text style={styles.appSubTitle}>{phrases[this.state.weather].subtitle || "Let's make it Rain"}</Text>
+          <Text style={styles.appSubTitle}>{phrases[this.state.weather].subtitle || "Let's make it Rain"} - {this.state.zoneName}</Text>
         </View>
       </View>
     );
