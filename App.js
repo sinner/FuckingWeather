@@ -17,6 +17,7 @@ const iconNames = {
   Clouds: 'md-cloudy',
   Snow: 'md-snow',
   Drizzle: 'md-umbrella',
+  Mist: 'md-cloudy',
 };
 
 const phrases = {
@@ -41,6 +42,10 @@ const phrases = {
     subtitle: "You're not supposed to eat it",
   },
   Drizzle: {
+    title: "Meh... don't even ask",
+    subtitle: 'What did  I just say?',
+  },
+  Mist: {
     title: "Meh... don't even ask",
     subtitle: 'What did  I just say?',
   },
@@ -86,9 +91,12 @@ export default class App extends Component<{}> {
     );
   }
 
-  getAWeatherPhrase() {
-    if(this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+  getAWeatherPhrase(type) {
+    if(type==='title' && this.state.weather && phrases.hasOwnProperty(this.state.weather)){
       return phrases[this.state.weather].title;
+    }
+    if(type==='subtitle' && this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+      return phrases[this.state.weather].subtitle;
     }
     return null;
   }
@@ -97,7 +105,7 @@ export default class App extends Component<{}> {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Icon name={iconNames[this.state.weather]} size={100} color={'white'}></Icon>
+          <Icon name={iconNames[this.state.weather] || 'md-cloudy'} size={100} color={'white'}></Icon>
           <Text style={styles.weatherTemp}>{this.state.temp}°</Text>
         </View>
         <View style={styles.body}>
@@ -105,9 +113,13 @@ export default class App extends Component<{}> {
             style={styles.appTitle}
             highlightStyle={{color: '#FF0000'}}
             searchWords={['Rock', 'Cloud', 'go', 'stay', 'devices', 'Fucking']}
-            textToHighlight={this.getAWeatherPhrase() || 'Build a Fucking Weather App'}
+            textToHighlight={this.getAWeatherPhrase('title') || 'Build a Fucking Weather App'}
           />
-          <Text style={styles.appSubTitle}>{phrases[this.state.weather].subtitle || "Let's make it Rain"} - {this.state.zoneName}</Text>
+          <Text style={styles.appSubTitle}>
+            {this.getAWeatherPhrase('subtitle') || "Let's make it Rain"}
+            -
+            {this.state.zoneName}
+          </Text>
         </View>
       </View>
     );
