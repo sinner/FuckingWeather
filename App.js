@@ -5,51 +5,10 @@ import {
   View
 } from 'react-native';
 
-import Icon from 'react-native-vector-icons/Ionicons';
-import {fetchWeather} from "./services/weatherApi";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {fetchWeather, phrases, iconNames} from "./services/weatherApi";
 import styles from './styles/App';
 import Highlighter from 'react-native-highlight-words';
-
-const iconNames = {
-  Clear: 'md-sunny',
-  Rain: 'md-rainy',
-  Thunderstorm: 'md-thunderstorm',
-  Clouds: 'md-cloudy',
-  Snow: 'md-snow',
-  Drizzle: 'md-umbrella',
-  Mist: 'md-cloudy',
-};
-
-const phrases = {
-  Clear: {
-    title: "It's Fucking Amaze Balls",
-    subtitle: 'Rock that shit!',
-  },
-  Rain: {
-    title: 'Rain rain go away',
-    subtitle: 'Stay inside and code all day',
-  },
-  Thunderstorm: {
-    title: 'Fucking Thunderstrike',
-    subtitle: 'Unplug those devices',
-  },
-  Clouds: {
-    title: 'Cloud storage limit reached',
-    subtitle: 'Error: 5000 - cirrocumulus',
-  },
-  Snow: {
-    title: 'Brain Fucking Freeze',
-    subtitle: "You're not supposed to eat it",
-  },
-  Drizzle: {
-    title: "Meh... don't even ask",
-    subtitle: 'What did  I just say?',
-  },
-  Mist: {
-    title: "Meh... don't even ask",
-    subtitle: 'What did  I just say?',
-  },
-};
 
 export default class App extends Component<{}> {
 
@@ -67,23 +26,38 @@ export default class App extends Component<{}> {
   }
 
   componentDidMount() {
+    this.getInitialLocation();
     this.geoLocation();
   }
 
-  geoLocation() {
-    navigator.geolocation.watchPosition(
-      (positionData) => {
-        fetchWeather(positionData.coords.latitude, positionData.coords.longitude)
-          .then((data) => {
-            this.setState({
-              temp: data.temp,
-              weather: data.weather,
-              zoneName: data.zoneName,
-            });
-          }, (error) => {
-            console.log('Error while it is fetching the weather', error);
-          });
+  watchPositionHandler = (positionData) => {
+    fetchWeather(positionData.coords.latitude, positionData.coords.longitude)
+      .then((data) => {
+        this.setState({
+          temp: data.temp,
+          weather: data.weather,
+          zoneName: data.zoneName,
+        });
+      }, (error) => {
+        console.log('Error while it is fetching the weather', error);
+      });
+  };
+
+  getInitialLocation() {
+    console.log("Initial Location");
+    navigator.geolocation.getCurrentPosition(
+      this.watchPositionHandler,
+      (error) => {
+        console.log('Error while it is capturing the current position', error);
       },
+      {timeout: 1000, maximumAge: 0, enableHighAccuracy: true}
+    );
+  }
+
+  geoLocation() {
+    console.log("Watch Location");
+    navigator.geolocation.watchPosition(
+      this.watchPositionHandler,
       (error) => {
         console.log('Error while it is capturing the current position', error);
       },
@@ -101,17 +75,38 @@ export default class App extends Component<{}> {
     return null;
   }
 
+  getWeatherIcon() {
+    if(this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+      return phrases[this.state.weather].icon;
+    }
+    return null;
+  }
+
+  getWeatherBackgroundColor() {
+    if(this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+      return phrases[this.state.weather].background;
+    }
+    return '';
+  }
+
+  getHighlightColor() {
+    if(this.state.weather && phrases.hasOwnProperty(this.state.weather)){
+      return phrases[this.state.weather].color;
+    }
+    return '';
+  }
+
   render() {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, {backgroundColor: this.getWeatherBackgroundColor()}]}>
         <View style={styles.header}>
-          <Icon name={iconNames[this.state.weather] || 'md-cloudy'} size={100} color={'white'}></Icon>
+          <Icon name={this.getWeatherIcon() || 'weather-cloudy'} size={100} color={'white'}></Icon>
           <Text style={styles.weatherTemp}>{this.state.temp}°</Text>
         </View>
         <View style={styles.body}>
           <Highlighter
             style={styles.appTitle}
-            highlightStyle={{color: '#FF0000'}}
+            highlightStyle={{color: this.getHighlightColor()}}
             searchWords={['Rock', 'Cloud', 'go', 'stay', 'devices', 'Fucking']}
             textToHighlight={this.getAWeatherPhrase('title') || 'Build a Fucking Weather App'}
           />
